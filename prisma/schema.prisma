@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BattleDungeonHisto {
+  id                String @id @unique @default(cuid())
+  dungeonId  Int
+  stageId    Int
+  wizardId   Int
+  autoRepeat Int?
+  winLose    Boolean?
+  clearTime  Int?
+}
+
+model Wizard {
+  wizardId          Int @id @unique
+  wizardName        String?
+  wizardMana        Int?
+  wizardCrystal     Int?
+  wizardCrystalPaid Int?
+  wizardLevel       Int?
+  wizardEnergy      Int?
+  wizardEnergyMax   Int?
+  arenaEnergy       Int?
+  eventCoin         Int?
+  User              User?   @relation(fields: [userId], references: [id])
+  userId            String?
+}
+
+model User {
+  id       String   @id @unique @default(cuid())
+  username String?   @unique
+  password String
+  email    String   @unique
+  Wizards  Wizard[]
+}
+
+model DungeonCount {
+  wizardId         Int
+  dungeonId        Int
+  stageId          Int
+  dungeonName      String?
+  clearTimeAverage Int?
+  win              Int?
+  lose             Int?
+
+  @@id([wizardId, dungeonId, stageId])
+}

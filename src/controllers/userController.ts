@@ -1,60 +1,88 @@
 import { Request, Response } from 'express'
 import * as userService from '../services/userService'
+import { validationResult } from 'express-validator'
 
-function getAllUsers(req: Request, res: Response) {
-  const users = userService.getAllUsers()
-  res.send('Get all users')
+async function getAllUsers(req: Request, res: Response) {
+  const users = await userService.getAllUsers()
+  res.json({ status: 'OK', data: users })
 }
 
-function getOneUser(req: Request, res: Response) {
+async function getOneUser(req: Request, res: Response) {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ status: 'FAILED', errors: errors.array() })
+  }
+
   const {
     params: { userId }
   } = req
 
-  if (!userId) return
-
-  const user = userService.getOneUser()
-  res.send({ status: 'OK', data: user })
+  try {
+    const user = await userService.getOneUser(userId, true)
+    res.status(200).json({ status: 'OK', data: user })
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({ status: 'FAILED', error })
+  }
 }
 
-function createNewUser(req: Request, res: Response) {
+async function createNewUser(req: Request, res: Response) {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ status: 'FAILED', errors: errors.array() })
+  }
+
   const { body } = req
 
-  if (!body.name || !body.wizardId) {
-    res.status(400).send({
-      status: 'FAILED',
-      error: 'Missing required fields'
-    })
-  }
+  console.log(body)
 
-  const newUser = {
-    name: body.name,
-    wizardId: body.wizardId
+  try {
+    const createdUser = await userService.createNewUser(body)
+    res.status(201).json({ status: 'OK', data: createdUser })
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({ status: 'FAILED', error })
   }
-
-  const createdUser = userService.createNewUser()
-  res.status(201).send({ status: 'OK', data: createdUser })
 }
 
-function updateOneUser(req: Request, res: Response) {
+async function updateOneUser(req: Request, res: Response) {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ status: 'FAILED', errors: errors.array() })
+  }
+
   const {
     body,
     params: { userId }
   } = req
-  if (!userId) return
+  console.log(userId)
 
-  const updatedUser = userService.updateOneUser()
-  res.send({ status: 'OK', data: updatedUser })
+  try {
+    const updatedUser = await userService.updateOneUser(userId, body)
+    res.json({ status: 'OK', data: updatedUser })
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({ status: 'FAILED', error })
+  }
 }
 
-function deleteOneUser(req: Request, res: Response) {
+async function deleteOneUser(req: Request, res: Response) {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ status: 'FAILED', errors: errors.array() })
+  }
+  
   const {
     params: { userId }
   } = req
-  if (!userId) return
 
-  userService.deleteOneUser()
-  res.status(204).send({ status: 'OK' })
+  try {
+    await userService.deleteOneUser(userId)
+    res.status(204).json({ status: 'OK' })
+  } catch (error) {
+    console.log(error)
+    res.status(400).json({ status: 'FAILED', error })
+  }
 }
 
 export { getAllUsers, getOneUser, createNewUser, updateOneUser, deleteOneUser }
